@@ -1,0 +1,20 @@
+server:
+  port: 9090
+
+spring:
+  config:
+    import: ./secrets.properties
+  application:
+    name: warehouse-microservice
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://${POSTGRES_CONNECTION_URL}/${POSTGRES_DATABASE_NAME}
+    username: ${POSTGRES_DATABASE_USERNAME}
+    password: ${POSTGRES_DATABASE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+
