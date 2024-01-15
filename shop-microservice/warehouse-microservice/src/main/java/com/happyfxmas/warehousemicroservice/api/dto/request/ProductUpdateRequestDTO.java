@@ -15,7 +15,4 @@ public class ProductUpdateRequestDTO {
 
     @NotBlank(message = "type must be not empty!")
     private String type;
-
-    @NotBlank(message = "supplierId must be not empty!")
-    private String supplierId;
 }
