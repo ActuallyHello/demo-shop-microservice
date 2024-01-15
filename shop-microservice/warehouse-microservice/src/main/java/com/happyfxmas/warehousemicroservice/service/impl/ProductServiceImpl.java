@@ -12,11 +12,9 @@ import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +53,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Product create(ProductRequestDTO productRequestDTO, Supplier supplier) {
         var product = ProductMapper.makeModel(productRequestDTO);
+        product.setSupplier(supplier);
         try {
             product = productRepository.save(product);
             log.info("PRODUCT WAS CREATED WITH ID={}", product.getId());
@@ -73,7 +72,7 @@ public class ProductServiceImpl implements ProductService {
             log.info("PRODUCT WAS UPDATED WITH ID={}", product.getId());
             return product;
         } catch (DataIntegrityViolationException | PersistenceException exception) {
-            log.error("ERROR WHEN UPDATING PRODUCT: {}", exception.getMessage());
+            log.error("ERROR WHEN UPDATING PRODUCT WITH ID={}: {}", product.getId(), exception.getMessage());
             throw new ProductCreationException("Error when updating product! [DATABASE]", exception);
         }
     }
@@ -86,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
             productRepository.flush();
             log.info("PRODUCT WAS DELETED WITH ID={}", product.getId());
         } catch (DataIntegrityViolationException | PersistenceException exception) {
-            log.error("ERROR WHEN DELETING PRODUCT: {}", exception.getMessage());
+            log.error("ERROR WHEN DELETING PRODUCT WITH ID={}: {}", product.getId(), exception.getMessage());
             throw new ProductDeleteException("Error when deleting product! [DATABASE]", exception);
         }
     }
