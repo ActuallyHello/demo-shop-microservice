@@ -3,7 +3,9 @@ package com.happyfxmas.warehousemicroservice.api.controller;
 import com.happyfxmas.warehousemicroservice.api.dto.SupplierDTO;
 import com.happyfxmas.warehousemicroservice.api.dto.request.SupplierRequestDTO;
 import com.happyfxmas.warehousemicroservice.api.dto.request.SupplierUpdateRequestDTO;
+import com.happyfxmas.warehousemicroservice.api.dto.response.SupplierWithProductDTO;
 import com.happyfxmas.warehousemicroservice.api.mapper.SupplierMapper;
+import com.happyfxmas.warehousemicroservice.api.mapper.SupplierWithProductMapper;
 import com.happyfxmas.warehousemicroservice.exception.response.SupplierNotFoundException;
 import com.happyfxmas.warehousemicroservice.exception.response.SupplierServerException;
 import com.happyfxmas.warehousemicroservice.exception.service.SupplierCreationException;
@@ -38,6 +40,7 @@ public class SupplierController {
     private final SupplierService supplierService;
 
     private static final String BY_ID = "/{id}";
+    private static final String WITH_PRODUCTS = "/products";
 
     @GetMapping
     public ResponseEntity<List<SupplierDTO>> getAllSuppliers(@RequestParam(required = false) Integer page,
@@ -61,6 +64,13 @@ public class SupplierController {
         return ResponseEntity.ok(SupplierMapper.makeDTO(supplier));
     }
 
+    @GetMapping(BY_ID + WITH_PRODUCTS)
+    public ResponseEntity<SupplierWithProductDTO> getSupplierWithProductsById(@PathVariable UUID id) {
+        var supplier = supplierService.getByIdWithProducts(id)
+                .orElseThrow(() -> new SupplierNotFoundException("Supplier with id=%s was not found".formatted(id)));
+        return ResponseEntity.ok(SupplierWithProductMapper.makeDTO(supplier, supplier.getProducts()));
+    }
+
     @PostMapping
     public ResponseEntity<?> createSupplier(@RequestBody @Valid SupplierRequestDTO supplierRequestDTO) {
         try {
@@ -78,17 +88,8 @@ public class SupplierController {
                                                       @RequestBody @Valid SupplierUpdateRequestDTO supplierUpdateRequestDTO) {
         var supplier = supplierService.getById(id)
                 .orElseThrow(() -> new SupplierNotFoundException("Supplier with id=%s was not found".formatted(id)));
-        if (supplierUpdateRequestDTO.getCompanyName() != null) {
-            supplier.setCompanyName(supplierUpdateRequestDTO.getCompanyName());
-        }
-        if (supplierUpdateRequestDTO.getPhone() != null) {
-            supplier.setPhone(supplierUpdateRequestDTO.getPhone());
-        }
-        if (supplierUpdateRequestDTO.getEmail() != null) {
-            supplier.setEmail(supplierUpdateRequestDTO.getEmail());
-        }
         try {
-            supplier = supplierService.update(supplier);
+            supplier = supplierService.update(supplierUpdateRequestDTO, supplier);
             return ResponseEntity.ok(SupplierMapper.makeDTO(supplier));
         } catch (SupplierCreationException exception) {
             throw new SupplierServerException(exception.getMessage(), exception);
