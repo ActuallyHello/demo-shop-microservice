@@ -1,5 +1,7 @@
 package com.happyfxmas.warehousemicroservice.exception;
 
+import com.happyfxmas.warehousemicroservice.exception.response.InventoryNotFoundException;
+import com.happyfxmas.warehousemicroservice.exception.response.InventoryServerException;
 import com.happyfxmas.warehousemicroservice.exception.response.ProductNotFoundException;
 import com.happyfxmas.warehousemicroservice.exception.response.ProductServerException;
 import com.happyfxmas.warehousemicroservice.exception.response.SupplierNotFoundException;
@@ -20,7 +22,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WarehouseExceptionHandler {
 
-    @ExceptionHandler(value = {ProductNotFoundException.class, SupplierNotFoundException.class})
+    @ExceptionHandler(value = {
+            ProductNotFoundException.class,
+            SupplierNotFoundException.class,
+            InventoryNotFoundException.class
+    })
     public ResponseEntity<ExceptionDTO> handleNotFoundException(NotFoundException notFoundException) {
         var exceptionDTO = ExceptionDTO.of(
                 notFoundException.getMessage(),
@@ -30,11 +36,15 @@ public class WarehouseExceptionHandler {
         return new ResponseEntity<>(exceptionDTO, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(value = {ProductServerException.class, SupplierServerException.class})
-    public ResponseEntity<ExceptionDTO> handleServerException(NotFoundException notFoundException) {
+    @ExceptionHandler(value = {
+            ProductServerException.class,
+            SupplierServerException.class,
+            InventoryServerException.class
+    })
+    public ResponseEntity<ExceptionDTO> handleServerException(ServerException serverException) {
         var exceptionDTO = ExceptionDTO.of(
-                notFoundException.getMessage(),
-                notFoundException.getClass().getSimpleName(),
+                serverException.getMessage(),
+                serverException.getClass().getSimpleName(),
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 HttpStatus.INTERNAL_SERVER_ERROR.value());
         return new ResponseEntity<>(exceptionDTO, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -59,7 +69,7 @@ public class WarehouseExceptionHandler {
         return new ResponseEntity<>(exceptionDTO, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value = Exception.class)
+    @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<ExceptionDTO> handleOtherException(Exception exception) {
         log.error("UNEXPECTED EXCEPTION OCCURRED! {}", exception.getMessage());
         var exceptionDTO = ExceptionDTO.of(
