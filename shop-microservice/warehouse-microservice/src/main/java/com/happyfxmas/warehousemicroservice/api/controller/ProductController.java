@@ -62,15 +62,15 @@ public class ProductController {
     }
 
     @GetMapping(BY_ID)
-    public ResponseEntity<ProductDTO> getProductById(@PathVariable String id) {
-        var product = productService.getById(UUID.fromString(id))
+    public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID id) {
+        var product = productService.getById(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
         return ResponseEntity.ok(ProductMapper.makeDTO(product));
     }
 
     @GetMapping(BY_ID + WITH_SUPPLIERS)
-    public ResponseEntity<ProductWithSupplierDTO> getProductWithSupplierById(@PathVariable String id) {
-        var product = productService.getByIdWithSupplier(UUID.fromString(id))
+    public ResponseEntity<ProductWithSupplierDTO> getProductWithSupplierById(@PathVariable UUID id) {
+        var product = productService.getByIdWithSupplier(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
         return ResponseEntity.ok(ProductWithSupplierMapper.makeDTO(product, product.getSupplier()));
     }
@@ -91,9 +91,9 @@ public class ProductController {
     }
 
     @PatchMapping(BY_ID)
-    public ResponseEntity<ProductDTO> updateProductById(@PathVariable String id,
+    public ResponseEntity<ProductDTO> updateProductById(@PathVariable UUID id,
                                                   @RequestBody @Valid ProductUpdateRequestDTO productUpdateRequestDTO) {
-        var product = productService.getByIdWithSupplier(UUID.fromString(id))
+        var product = productService.getByIdWithSupplier(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
         if (productUpdateRequestDTO.getSupplierId() != null) {
             var supplier = supplierService.getById(UUID.fromString(productUpdateRequestDTO.getSupplierId()))
@@ -119,8 +119,8 @@ public class ProductController {
     }
 
     @DeleteMapping(BY_ID)
-    public ResponseEntity<?> deleteProductById(@PathVariable String id) {
-        var product = productService.getByIdWithSupplier(UUID.fromString(id))
+    public ResponseEntity<?> deleteProductById(@PathVariable UUID id) {
+        var product = productService.getByIdWithSupplier(id)
                 .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
         try {
             productService.delete(product);
