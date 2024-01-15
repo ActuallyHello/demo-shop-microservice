@@ -79,7 +79,7 @@ public class ProductController {
     public ResponseEntity<?> createProduct(@RequestBody @Valid ProductRequestDTO productRequestDTO) {
         var supplier = supplierService.getById(UUID.fromString(productRequestDTO.getSupplierId()))
                 .orElseThrow(() -> new SupplierNotFoundException(
-                                "Supplier with id=%s was not found!".formatted(productRequestDTO.getSupplierId())));
+                        "Supplier with id=%s was not found!".formatted(productRequestDTO.getSupplierId())));
         try {
             var product = productService.create(productRequestDTO, supplier);
             return ResponseEntity
@@ -91,9 +91,8 @@ public class ProductController {
     }
 
     @PatchMapping(BY_ID)
-    public ResponseEntity<ProductDTO> updateProduct(@PathVariable String id,
-                                                    @RequestBody @Valid ProductUpdateRequestDTO productUpdateRequestDTO
-    ) {
+    public ResponseEntity<ProductDTO> updateProductById(@PathVariable String id,
+                                                  @RequestBody @Valid ProductUpdateRequestDTO productUpdateRequestDTO) {
         var product = productService.getByIdWithSupplier(UUID.fromString(id))
                 .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
         if (productUpdateRequestDTO.getSupplierId() != null) {
@@ -106,8 +105,7 @@ public class ProductController {
             product.setTitle(productUpdateRequestDTO.getTitle());
         }
         if (productUpdateRequestDTO.getDescription() != null) {
-            product.setDescription(
-                    productUpdateRequestDTO.getDescription());
+            product.setDescription(productUpdateRequestDTO.getDescription());
         }
         if (productUpdateRequestDTO.getType() != null) {
             product.setType(ProductType.valueOf(productUpdateRequestDTO.getType()));
@@ -121,7 +119,7 @@ public class ProductController {
     }
 
     @DeleteMapping(BY_ID)
-    public ResponseEntity<?> deleteProduct(@PathVariable String id) {
+    public ResponseEntity<?> deleteProductById(@PathVariable String id) {
         var product = productService.getByIdWithSupplier(UUID.fromString(id))
                 .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
         try {
