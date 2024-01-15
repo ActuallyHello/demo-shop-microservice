@@ -1,6 +1,7 @@
 package com.happyfxmas.warehousemicroservice.service;
 
 import com.happyfxmas.warehousemicroservice.api.dto.request.ProductRequestDTO;
+import com.happyfxmas.warehousemicroservice.api.dto.request.ProductUpdateRequestDTO;
 import com.happyfxmas.warehousemicroservice.store.model.Product;
 import com.happyfxmas.warehousemicroservice.store.model.Supplier;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,8 @@ public interface ProductService {
     List<Product> getAll(Pageable pageable);
     Optional<Product> getById(UUID id);
     Optional<Product> getByIdWithSupplier(UUID id);
+    Optional<Product> getByIdWithInventory(UUID id);
     Product create(ProductRequestDTO productRequestDTO, Supplier supplier);
-    Product update(Product product);
+    Product update(ProductUpdateRequestDTO productUpdateRequestDTO, Product product);
     void delete(Product product);
 }

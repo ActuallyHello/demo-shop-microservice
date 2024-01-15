@@ -16,4 +16,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
                 inner join fetch product.supplier
             """)
     Optional<Product> findByIdWithSupplier(UUID id);
+
+    @Query("""
+            select product
+            from Product product
+                left join fetch product.inventory
+            """)
+    Optional<Product> findByIdWithInventory(UUID id);
 }
