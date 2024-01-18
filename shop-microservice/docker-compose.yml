@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: ${WAREHOUSE_POSTGRES_USERNAME}
       POSTGRES_PASSWORD_FILE: /run/secrets/warehouse-secrets
-      POSTGRES_DB: test-warehouse-service
+      POSTGRES_DB: ${POSTGRES_DATABASE_NAME}
     expose:
       - "5431"
     ports:
@@ -28,7 +28,7 @@ services:
     depends_on:
       - warehouse-postgres
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://warehouse-postgres:5431/test-warehouse-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://warehouse-postgres:5431/${POSTGRES_DATABASE_NAME}
       - SPRING_DATASOURCE_USERNAME=${WAREHOUSE_POSTGRES_USERNAME}
       - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/warehouse-secrets
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
