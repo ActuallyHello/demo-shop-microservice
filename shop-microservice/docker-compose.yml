@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  warehouse-postgres:
+    image: 'postgres:13.11-alpine'
+    container_name: warehouse-postgres-database
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${WAREHOUSE_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD_FILE: /run/secrets/warehouse-secrets
+      POSTGRES_DB: test-warehouse-service
+    expose:
+      - "5431"
+    ports:
+      - "5431:5431"
+    command: -p 5431
+    restart: unless-stopped
+    secrets:
+      - warehouse-secrets
+
+  warehouse-service:
+    build:
+      context: ./warehouse-microservice/.
+    container_name: warehouse-app
+    ports:
+      - "9090:9090"
+    depends_on:
+      - warehouse-postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://warehouse-postgres:5431/test-warehouse-service
+      - SPRING_DATASOURCE_USERNAME=${WAREHOUSE_POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/warehouse-secrets
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    secrets:
+      - warehouse-secrets
+
+volumes:
+  pgdata:
+
+secrets:
+  warehouse-secrets:
+    file: secrets/warehouse-postgres-password.env
