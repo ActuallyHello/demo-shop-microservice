@@ -59,16 +59,18 @@ public class SupplierController {
 
     @GetMapping(BY_ID)
     public ResponseEntity<SupplierDTO> getSupplierById(@PathVariable UUID id) {
-        var supplier = supplierService.getById(id)
+        var supplierDTO = supplierService.getById(id)
+                .map(SupplierMapper::makeDTO)
                 .orElseThrow(() -> new SupplierNotFoundException("Supplier with id=%s was not found".formatted(id)));
-        return ResponseEntity.ok(SupplierMapper.makeDTO(supplier));
+        return ResponseEntity.ok(supplierDTO);
     }
 
     @GetMapping(BY_ID + WITH_PRODUCTS)
     public ResponseEntity<SupplierWithProductDTO> getSupplierWithProductsById(@PathVariable UUID id) {
-        var supplier = supplierService.getByIdWithProducts(id)
+        var supplierWithProductDTO = supplierService.getByIdWithProducts(id)
+                .map(supplier -> SupplierWithProductMapper.makeDTO(supplier, supplier.getProducts()))
                 .orElseThrow(() -> new SupplierNotFoundException("Supplier with id=%s was not found".formatted(id)));
-        return ResponseEntity.ok(SupplierWithProductMapper.makeDTO(supplier, supplier.getProducts()));
+        return ResponseEntity.ok(supplierWithProductDTO);
     }
 
     @PostMapping

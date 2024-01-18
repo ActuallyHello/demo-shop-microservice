@@ -40,17 +40,19 @@ public class InventoryController {
 
     @GetMapping(BY_ID)
     public ResponseEntity<InventoryDTO> getInventoryById(@PathVariable UUID id) {
-        var inventory = inventoryService.getById(id)
+        var inventoryDTO = inventoryService.getById(id)
+                .map(InventoryMapper::makeDTO)
                 .orElseThrow(() -> new InventoryNotFoundException("Inventory with id=%s was not found".formatted(id)));
-        return ResponseEntity.ok(InventoryMapper.makeDTO(inventory));
+        return ResponseEntity.ok(inventoryDTO);
     }
 
     @GetMapping(BY_PRODUCT_ID)
     public ResponseEntity<InventoryDTO> getInventoryByProductId(@PathVariable UUID productId) {
-        var product = productService.getByIdWithInventory(productId)
+        var productDTO = productService.getByIdWithInventory(productId)
+                .map(product -> InventoryMapper.makeDTO(product.getInventory()))
                 .orElseThrow(() -> new ProductNotFoundException(
                         "Inventory with productId=%s was not found".formatted(productId)));
-        return ResponseEntity.ok(InventoryMapper.makeDTO(product.getInventory()));
+        return ResponseEntity.ok(productDTO);
     }
 
     @PostMapping

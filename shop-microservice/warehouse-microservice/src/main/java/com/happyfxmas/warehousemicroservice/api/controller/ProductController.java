@@ -65,25 +65,28 @@ public class ProductController {
 
     @GetMapping(BY_ID)
     public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID id) {
-        var product = productService.getById(id)
+        var productDTO = productService.getById(id)
+                .map(ProductMapper::makeDTO)
                 .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
-        return ResponseEntity.ok(ProductMapper.makeDTO(product));
+        return ResponseEntity.ok(productDTO);
     }
 
     @GetMapping(BY_ID + WITH_SUPPLIER)
     public ResponseEntity<ProductWithSupplierDTO> getProductWithSupplierById(@PathVariable UUID id) {
-        var product = productService.getByIdWithSupplier(id)
+        var productWithSupplierDTO = productService.getByIdWithSupplier(id)
+                .map(product -> ProductWithSupplierMapper.makeDTO(product, product.getSupplier()))
                 .orElseThrow(() -> new ProductNotFoundException(
                         "ProductSupplier with id=%s does not exist!".formatted(id)));
-        return ResponseEntity.ok(ProductWithSupplierMapper.makeDTO(product, product.getSupplier()));
+        return ResponseEntity.ok(productWithSupplierDTO);
     }
 
     @GetMapping(BY_ID + WITH_INVENTORY)
     public ResponseEntity<ProductWithInventoryDTO> getProductWithInventoryById(@PathVariable UUID id) {
-        var product = productService.getByIdWithInventory(id)
+        var productWithInventoryDTO = productService.getByIdWithInventory(id)
+                .map(product -> ProductWithInventoryMapper.makeDTO(product, product.getInventory()))
                 .orElseThrow(() -> new ProductNotFoundException(
                         "ProductInventory with id=%s does not exist!".formatted(id)));
-        return ResponseEntity.ok(ProductWithInventoryMapper.makeDTO(product, product.getInventory()));
+        return ResponseEntity.ok(productWithInventoryDTO);
     }
 
     @PostMapping
