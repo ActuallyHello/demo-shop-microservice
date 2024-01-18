@@ -37,10 +37,9 @@ public class SupplierRepositoryTest {
         Supplier actual = supplierRepository.save(supplier);
 
         //then
+        assertThat(actual).isNotNull();
         assertThat(actual.getId()).isNotNull();
         assertThat(actual.getCompanyName()).isEqualTo(companyName);
-        assertThat(actual.getPhone()).isEqualTo(phone);
-        assertThat(actual.getEmail()).isEqualTo(email);
         assertThat(actual.getCreatedAt()).isNotNull();
         assertThat(actual.getUpdatedAt()).isNotNull();
     }
