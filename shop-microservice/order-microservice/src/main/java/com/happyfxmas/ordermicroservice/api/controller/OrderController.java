@@ -1,7 +1,9 @@
 package com.happyfxmas.ordermicroservice.api.controller;
 
 import com.happyfxmas.ordermicroservice.api.dto.request.OrderRequestDTO;
+import com.happyfxmas.ordermicroservice.api.mapper.OrderDTOMapper;
 import com.happyfxmas.ordermicroservice.service.OrderService;
+import com.happyfxmas.ordermicroservice.store.enums.OrderStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody @Valid OrderRequestDTO orderRequestDTO) {
+        var order = OrderDTOMapper.makeModel(orderRequestDTO, OrderStatus.CREATED);
         return null;
     }
 }
