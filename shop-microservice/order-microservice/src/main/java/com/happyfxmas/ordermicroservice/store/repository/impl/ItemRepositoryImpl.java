@@ -2,7 +2,7 @@ package com.happyfxmas.ordermicroservice.store.repository.impl;
 
 import com.happyfxmas.ordermicroservice.exception.service.ItemCreationException;
 import com.happyfxmas.ordermicroservice.exception.service.ItemDeleteException;
-import com.happyfxmas.ordermicroservice.store.mapper.ItemWithStatusMapper;
+import com.happyfxmas.ordermicroservice.store.mapper.ItemMapper;
 import com.happyfxmas.ordermicroservice.store.model.Item;
 import com.happyfxmas.ordermicroservice.store.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,52 +21,52 @@ import java.util.UUID;
 public class ItemRepositoryImpl implements ItemRepository {
 
     private final JdbcTemplate jdbcTemplate;
-    private final ItemWithStatusMapper itemWithStatusMapper;
+    private final ItemMapper itemWithStatusMapper;
 
     private static final String DATABASE_TAG = "[DATABASE]";
 
-    private static final String SELECT_ITEM_WITH_STATUS_BY_ID = """
+    private static final String SELECT_ITEM_BY_ID = """
             SELECT item.id, item.created_at,
                    item.updated_at, item.product_id,
                    item.price, item.quantity, item.orders_id,
-                   item_status.id, item_status.code
+                   item_status.id, item.status
             FROM item
             INNER JOIN item_status
                 ON item_status.id = item.item_status_id
             WHERE item.id = ?
             ORDER BY item.updated_at;
             """;
-    private static final String SELECT_ITEMS_WITH_STATUS_BY_ORDER_ID = """
+    private static final String SELECT_ITEMS_BY_ORDER_ID = """
             SELECT item.id, item.created_at,
                    item.updated_at, item.product_id,
                    item.price, item.quantity, item.orders_id,
-                   item_status.id, item_status.code
+                   item_status.id, item.status
             FROM item
             INNER JOIN item_status
                 ON item_status.id = item.item_status_id
             WHERE item.order_id = ?
             ORDER BY item.updated_at;
             """;
-    private static final String SELECT_ITEMS_WITH_STATUS = """
+    private static final String SELECT_ITEMS = """
             SELECT item.id, item.created_at,
                    item.updated_at, item.product_id,
                    item.price, item.quantity, item.orders_id,
-                   item_status.id, item_status.code
+                   item_status.id, item.status
             FROM item
             INNER JOIN item_status
                 ON item_status.id = item.item_status_id
             ORDER BY item.updated_at;
             """;
     private static final String INSERT_INTO_ITEM = """
-            INSERT INTO orders (item.id, item.created_at,
-                                item.updated_at, item.product_id,
-                                item.price, item.quantity,
-                                item.orders_id, item.item_status_id)
+            INSERT INTO orders (id, created_at,
+                                updated_at, product_id,
+                                price, quantity,
+                                orders_id, item.status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?);
             """;
     private static final String UPDATE_ITEM_BY_ID = """
             UPDATE item
-            SET updated_at=?, product_id=?, price=?, quantity=?, order_id=?, item_status_id=?
+            SET updated_at=?, product_id=?, price=?, quantity=?, order_id=?, status=?
             WHERE item.id=?;
             """;
     private static final String DELETE_ITEM_BY_ID = """
@@ -77,7 +77,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public Optional<Item> findById(UUID id) {
         var order = jdbcTemplate.query(
-                SELECT_ITEM_WITH_STATUS_BY_ID,
+                SELECT_ITEM_BY_ID,
                 itemWithStatusMapper,
                 id
         ).stream().findFirst();
@@ -88,7 +88,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public List<Item> findAll() {
         var items = jdbcTemplate.query(
-                SELECT_ITEMS_WITH_STATUS,
+                SELECT_ITEMS,
                 itemWithStatusMapper);
         log.info("GET {} ITEMS", items.size());
         return items;
@@ -106,7 +106,7 @@ public class ItemRepositoryImpl implements ItemRepository {
                     item.getPrice(),
                     item.getQuantity(),
                     item.getOrder().getId(),
-                    item.getItemStatus().getId());
+                    item.getItemStatus().getStatus());
             log.info("CREATED ITEM WITH ID={}", item.getId());
         } catch (DataAccessException exception) {
             log.error("ERROR WHEN SAVING ITEM: {}", exception.getMessage());
@@ -124,7 +124,7 @@ public class ItemRepositoryImpl implements ItemRepository {
                     item.getPrice(),
                     item.getQuantity(),
                     item.getOrder().getId(),
-                    item.getItemStatus().getId(),
+                    item.getItemStatus().getStatus(),
                     id);
             log.info("UPDATED ITEM WITH ID={}", item.getId());
         } catch (DataAccessException exception) {
@@ -147,7 +147,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public List<Item> findAllByOrderId(UUID orderId) {
         var items = jdbcTemplate.query(
-                SELECT_ITEMS_WITH_STATUS_BY_ORDER_ID,
+                SELECT_ITEMS_BY_ORDER_ID,
                 itemWithStatusMapper,
                 orderId);
         log.info("GET {} ITEMS", items.size());
