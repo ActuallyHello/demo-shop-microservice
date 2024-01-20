@@ -17,6 +17,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>warehouse-microservice</module>
+        <module>order-microservice</module>
     </modules>
 
     <properties>
