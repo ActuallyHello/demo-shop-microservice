@@ -10,7 +10,7 @@ public class ItemStatusMapper implements RowMapper<ItemStatus> {
     @Override
     public ItemStatus mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         return ItemStatus.builder()
-                .id(resultSet.getObject("item_status.id", java.util.UUID.class))
+                .id(resultSet.getInt("item_status.id"))
                 .code(resultSet.getString("item_status.code"))
                 .build();
     }

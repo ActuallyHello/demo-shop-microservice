@@ -41,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
                 .totalAmount(BigDecimal.ZERO)
                 .orderStatus(orderStatus)
                 .build();
-        order = orderRepository.save(order);
+        orderRepository.save(order);
         return order;
     }
 

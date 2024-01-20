@@ -21,7 +21,7 @@ public class ItemWithStatusMapper implements RowMapper<Item> {
                 .productId(resultSet.getObject("item.product_id", UUID.class))
                 .itemStatus(
                         ItemStatus.builder()
-                                .id(resultSet.getObject("item_status.id", UUID.class))
+                                .id(resultSet.getInt("item_status.id"))
                                 .code(resultSet.getString("item_status.code"))
                                 .build()
                 )

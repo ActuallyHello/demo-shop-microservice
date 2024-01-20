@@ -19,7 +19,7 @@ public class OrderWithStatusMapper implements RowMapper<Order> {
                 .totalAmount(resultSet.getBigDecimal("orders.total_amount"))
                 .orderStatus(
                         OrderStatus.builder()
-                                .id(resultSet.getObject("order_status.id", UUID.class))
+                                .id(resultSet.getInt("order_status.id"))
                                 .code(resultSet.getString("order_status.code"))
                                 .build()
                 )
