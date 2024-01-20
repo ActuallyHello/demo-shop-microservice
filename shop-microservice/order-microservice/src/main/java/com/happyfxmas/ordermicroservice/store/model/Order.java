@@ -1,5 +1,6 @@
 package com.happyfxmas.ordermicroservice.store.model;
 
+import com.happyfxmas.ordermicroservice.store.enums.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +24,5 @@ public class Order {
     private Timestamp updatedAt;
     private UUID customerId;
     private BigDecimal totalAmount;
-
     private OrderStatus orderStatus;
 }
