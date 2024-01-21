@@ -1,15 +1,15 @@
 package com.happyfxmas.ordermicroservice.service.impl;
 
-import com.happyfxmas.ordermicroservice.exception.response.OrderNotFoundException;
-import com.happyfxmas.ordermicroservice.exception.response.OrderServerException;
 import com.happyfxmas.ordermicroservice.exception.service.OrderCreationException;
 import com.happyfxmas.ordermicroservice.exception.service.OrderDeleteException;
+import com.happyfxmas.ordermicroservice.exception.service.OrderDoesNotExistException;
 import com.happyfxmas.ordermicroservice.service.OrderService;
 import com.happyfxmas.ordermicroservice.store.enums.OrderStatus;
 import com.happyfxmas.ordermicroservice.store.model.Order;
 import com.happyfxmas.ordermicroservice.store.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("ORDER WITH ID={} DOES NOT EXIST!", id);
-                    return new OrderNotFoundException("Order with id=%s was not found".formatted(id));
+                    return new OrderDoesNotExistException("Order with id=%s was not found".formatted(id));
                 });
     }
 
@@ -39,40 +39,42 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getAllByStatus(OrderStatus orderStatus) {
-        log.info("GETTING ALL ORDERS WITH STATUS={}", orderStatus.getStatus());
-        return orderRepository.findAllByStatus(orderStatus);
+    public List<Order> getAllByStatusIn(List<OrderStatus> orderStatuses) {
+        log.info("GETTING ALL ORDERS WITH STATUSES={}", orderStatuses);
+        return orderRepository.findAllByStatusIn(orderStatuses);
     }
 
     @Override
-    public Order create(Order order, OrderStatus orderStatus) {
-        log.info("SAVING ORDER WITH ID={}", order.getId());
-        order.setOrderStatus(orderStatus);
+    public Order create(Order order) {
         try {
             orderRepository.save(order);
+            log.info("CREATED ORDER WITH ID={}", order.getId());
             return order;
-        } catch (OrderCreationException exception) {
-            throw new OrderServerException(exception.getMessage(), exception);
+        } catch (DataAccessException exception) {
+            log.error("ERROR WHEN CREATING ORDER: {}", exception.getMessage());
+            throw new OrderCreationException(exception.getMessage(), exception);
         }
     }
 
     @Override
-    public void update(Order oldOrder, Order newOrder) {
-        log.info("UPDATE ORDER WITH ID={}", oldOrder.getId());
+    public void update(Order newOrder) {
         try {
-            orderRepository.update(oldOrder.getId(), newOrder);
-        } catch (OrderCreationException exception) {
-            throw new OrderServerException(exception.getMessage(), exception);
+            orderRepository.update(newOrder);
+            log.info("UPDATED ORDER WITH ID={}", newOrder.getId());
+        } catch (DataAccessException exception) {
+            log.error("ERROR WHEN UPDATING ORDER: {}", exception.getMessage());
+            throw new OrderCreationException(exception.getMessage(), exception);
         }
     }
 
     @Override
     public void delete(Order order) {
-        log.info("DELETING ORDER WITH ID={}", order.getId());
         try {
             orderRepository.delete(order);
-        } catch (OrderDeleteException exception) {
-            throw new OrderServerException(exception.getMessage(), exception);
+            log.info("DELETED ORDER WITH ID={}", order.getId());
+        } catch (DataAccessException exception) {
+            log.error("ERROR WHEN DELETING ORDER: {}", exception.getMessage());
+            throw new OrderDeleteException(exception.getMessage(), exception);
         }
     }
 }
