@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface OrderRepository extends CrudRepository<Order, UUID> {
     List<Order> findAllByCustomerId(UUID customerId);
-    List<Order> findAllByStatus(OrderStatus orderStatus);
+    List<Order> findAllByStatusIn(List<OrderStatus> orderStatuses);
 }

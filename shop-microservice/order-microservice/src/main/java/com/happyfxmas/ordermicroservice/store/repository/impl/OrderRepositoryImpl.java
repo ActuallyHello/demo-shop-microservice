@@ -1,20 +1,18 @@
 package com.happyfxmas.ordermicroservice.store.repository.impl;
 
-import com.happyfxmas.ordermicroservice.exception.service.OrderCreationException;
-import com.happyfxmas.ordermicroservice.exception.service.OrderDeleteException;
 import com.happyfxmas.ordermicroservice.store.enums.OrderStatus;
 import com.happyfxmas.ordermicroservice.store.mapper.OrderMapper;
 import com.happyfxmas.ordermicroservice.store.model.Order;
 import com.happyfxmas.ordermicroservice.store.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -23,8 +21,6 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final OrderMapper orderMapper;
-
-    private static final String DATABASE_TAG = "[DATABASE]";
 
     private static final String SELECT_ORDER_BY_ID = """
             SELECT orders.id, orders.created_at,
@@ -49,12 +45,12 @@ public class OrderRepositoryImpl implements OrderRepository {
             FROM orders
             ORDER BY orders.updated_at;
             """;
-    private static final String SELECT_ORDERS_BY_ORDER_STATUS = """
+    private static final String SELECT_ORDERS_BY_STATUSES = """
             SELECT orders.id, orders.created_at,
                    orders.updated_at, orders.customer_id,
                    orders.total_amount, orders.status
             FROM orders
-            WHERE orders.status.id=?
+            WHERE orders.status IN (?)
             ORDER BY orders.updated_at;
             """;
     private static final String INSERT_INTO_ORDER = """
@@ -75,87 +71,63 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Optional<Order> findById(UUID id) {
-        var order = jdbcTemplate.query(
+        return jdbcTemplate.query(
                 SELECT_ORDER_BY_ID,
                 orderMapper,
                 id
         ).stream().findFirst();
-        log.info("GET ORDER BY ID={}", id);
-        return order;
     }
 
     @Override
     public List<Order> findAll() {
-        var orders = jdbcTemplate.query(
+        return jdbcTemplate.query(
                 SELECT_ORDERS,
                 orderMapper);
-        log.info("GET {} ORDERS", orders.size());
-        return orders;
     }
 
     @Override
     public void save(Order order) {
-        try {
-            jdbcTemplate.update(
-                    INSERT_INTO_ORDER,
-                    order.getId(),
-                    order.getCreatedAt(),
-                    order.getUpdatedAt(),
-                    order.getCustomerId(),
-                    order.getTotalAmount(),
-                    order.getOrderStatus().getStatus());
-            log.info("CREATED ORDER WITH ID={}", order.getId());
-        } catch (DataAccessException exception) {
-            log.error("ERROR WHEN SAVING ORDER: {}", exception.getMessage());
-            throw new OrderCreationException("Error when saving order! " + DATABASE_TAG);
-        }
+        jdbcTemplate.update(
+                INSERT_INTO_ORDER,
+                order.getId(),
+                order.getCreatedAt(),
+                order.getUpdatedAt(),
+                order.getCustomerId(),
+                order.getTotalAmount(),
+                order.getOrderStatus().getStatus());
     }
 
     @Override
-    public void update(UUID id, Order order) {
-        try {
+    public void update(Order order) {
             jdbcTemplate.update(
                     UPDATE_ORDER_BY_ID,
                     order.getUpdatedAt(),
                     order.getCustomerId(),
                     order.getTotalAmount(),
                     order.getOrderStatus().getStatus(),
-                    id);
-            log.info("UPDATED ORDER WITH ID={}", order.getId());
-        } catch (DataAccessException exception) {
-            log.error("ERROR WHEN UPDATING ORDER: {}", exception.getMessage());
-            throw new OrderCreationException("Error when updating order! " + DATABASE_TAG);
-        }
+                    order.getId());
     }
 
     @Override
     public void delete(Order order) {
-        try {
-            jdbcTemplate.update(DELETE_ORDER_BY_ID, order.getId());
-            log.info("DELETED ORDER WITH ID={}", order.getId());
-        } catch (DataAccessException exception) {
-            log.error("ERROR WHEN DELETING ORDER: {}", exception.getMessage());
-            throw new OrderDeleteException("Error when deleting order! " + DATABASE_TAG);
-        }
+        jdbcTemplate.update(DELETE_ORDER_BY_ID, order.getId());
     }
 
     @Override
     public List<Order> findAllByCustomerId(UUID customerId) {
-        var order = jdbcTemplate.query(
+        return jdbcTemplate.query(
                 SELECT_ORDERS_BY_CUSTOMER_ID,
                 orderMapper,
                 customerId);
-        log.info("GET {} ORDERS BY CUSTOMER ID={}", order.size(), customerId);
-        return order;
     }
 
     @Override
-    public List<Order> findAllByStatus(OrderStatus orderStatus) {
-        var orders = jdbcTemplate.query(
-                SELECT_ORDERS_BY_ORDER_STATUS,
+    public List<Order> findAllByStatusIn(List<OrderStatus> orderStatuses) {
+        return jdbcTemplate.query(
+                SELECT_ORDERS_BY_STATUSES,
                 orderMapper,
-                orderStatus.getStatus());
-        log.info("GET {} ORDERS BY ORDER STATUS ID={}", orders.size(), orderStatus.getStatus());
-        return orders;
+                orderStatuses.stream()
+                        .map(OrderStatus::getStatus)
+                        .collect(Collectors.joining(",")));
     }
 }
