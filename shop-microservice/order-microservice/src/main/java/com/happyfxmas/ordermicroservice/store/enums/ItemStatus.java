@@ -7,7 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
 public enum ItemStatus {
-    IN_STOCK("IN_STOCK"), OUT_OF_STOCK("OUT_OF_STOCK"), LAST("LAST");
+    IN_STOCK("IN_STOCK"), OUT_OF_STOCK("OUT_OF_STOCK");
 
     private final String status;
 }
