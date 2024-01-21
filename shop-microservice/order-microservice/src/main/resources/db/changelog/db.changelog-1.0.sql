@@ -17,7 +17,7 @@ create table orders
     primary key (id)
 );
 
-CREATE TYPE item_status AS ENUM ('IN_STOCK', 'OUT_OF_STOCK', 'LAST');
+CREATE TYPE item_status AS ENUM ('IN_STOCK', 'OUT_OF_STOCK');
 
 create table item
 (
@@ -33,7 +33,7 @@ create table item
     primary key (id)
 );
 
-alter table if exists item add constraint item_orders_fk foreign key (orders_id) references orders;
+alter table if exists item add constraint item_orders_fk foreign key (orders_id) references orders on delete cascade on update cascade;
 
 create index orders_updated_at_customer_id_seq ON orders (updated_at, customer_id);
 create index orders_status_idx ON orders (status);
