@@ -11,8 +11,3 @@ spring:
     url: jdbc:postgresql://${POSTGRES_CONNECTION_URL}/${POSTGRES_DATABASE_NAME}
     username: ${POSTGRES_DATABASE_USERNAME}
     password: ${POSTGRES_DATABASE_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
-    open-in-view: false
