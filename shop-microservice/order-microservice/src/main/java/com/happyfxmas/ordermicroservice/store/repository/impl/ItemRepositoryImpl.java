@@ -21,15 +21,13 @@ import java.util.UUID;
 public class ItemRepositoryImpl implements ItemRepository {
 
     private final JdbcTemplate jdbcTemplate;
-    private final ItemMapper itemWithStatusMapper;
-
-    private static final String DATABASE_TAG = "[DATABASE]";
+    private final ItemMapper itemMapper;
 
     private static final String SELECT_ITEM_BY_ID = """
             SELECT item.id, item.created_at,
                    item.updated_at, item.product_id,
                    item.price, item.quantity, item.orders_id,
-                   item_status.id, item.status
+                   item.status
             FROM item
             WHERE item.id = ?
             ORDER BY item.updated_at;
@@ -38,24 +36,24 @@ public class ItemRepositoryImpl implements ItemRepository {
             SELECT item.id, item.created_at,
                    item.updated_at, item.product_id,
                    item.price, item.quantity, item.orders_id,
-                   item_status.id, item.status
+                   item.status
             FROM item
-            WHERE item.order_id = ?
+            WHERE item.orders_id = ?
             ORDER BY item.updated_at;
             """;
     private static final String SELECT_ITEMS = """
             SELECT item.id, item.created_at,
                    item.updated_at, item.product_id,
                    item.price, item.quantity, item.orders_id,
-                   item_status.id, item.status
+                   item.status
             FROM item
             ORDER BY item.updated_at;
             """;
     private static final String INSERT_INTO_ITEM = """
-            INSERT INTO orders (id, created_at,
+            INSERT INTO item (id, created_at,
                                 updated_at, product_id,
                                 price, quantity,
-                                orders_id, item.status)
+                                orders_id, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?);
             """;
     private static final String UPDATE_ITEM_BY_ID = """
@@ -70,18 +68,12 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public Optional<Item> findById(UUID id) {
-        return jdbcTemplate.query(
-                SELECT_ITEM_BY_ID,
-                itemWithStatusMapper,
-                id
-        ).stream().findFirst();
+        return jdbcTemplate.query(SELECT_ITEM_BY_ID, itemMapper, id).stream().findFirst();
     }
 
     @Override
     public List<Item> findAll() {
-        return jdbcTemplate.query(
-                SELECT_ITEMS,
-                itemWithStatusMapper);
+        return jdbcTemplate.query(SELECT_ITEMS, itemMapper);
     }
 
     @Override
@@ -143,9 +135,6 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public List<Item> findAllByOrderId(UUID orderId) {
-        return jdbcTemplate.query(
-                SELECT_ITEMS_BY_ORDER_ID,
-                itemWithStatusMapper,
-                orderId);
+        return jdbcTemplate.query(SELECT_ITEMS_BY_ORDER_ID, itemMapper, orderId);
     }
 }
