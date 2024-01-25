@@ -1,11 +1,14 @@
 package com.happyfxmas.warehousemicroservice.exception;
 
-import com.happyfxmas.warehousemicroservice.exception.response.InventoryNotFoundException;
-import com.happyfxmas.warehousemicroservice.exception.response.InventoryServerException;
-import com.happyfxmas.warehousemicroservice.exception.response.ProductNotFoundException;
-import com.happyfxmas.warehousemicroservice.exception.response.ProductServerException;
-import com.happyfxmas.warehousemicroservice.exception.response.SupplierNotFoundException;
-import com.happyfxmas.warehousemicroservice.exception.response.SupplierServerException;
+import com.happyfxmas.warehousemicroservice.exception.service.InventoryCreationException;
+import com.happyfxmas.warehousemicroservice.exception.service.InventoryDeleteException;
+import com.happyfxmas.warehousemicroservice.exception.service.InventoryDoesNotExistException;
+import com.happyfxmas.warehousemicroservice.exception.service.ProductCreationException;
+import com.happyfxmas.warehousemicroservice.exception.service.ProductDeleteException;
+import com.happyfxmas.warehousemicroservice.exception.service.ProductDoesNotExistException;
+import com.happyfxmas.warehousemicroservice.exception.service.SupplierCreationException;
+import com.happyfxmas.warehousemicroservice.exception.service.SupplierDeleteException;
+import com.happyfxmas.warehousemicroservice.exception.service.SupplierDoesNotExistException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +26,11 @@ import java.util.stream.Collectors;
 public class WarehouseExceptionHandler {
 
     @ExceptionHandler(value = {
-            ProductNotFoundException.class,
-            SupplierNotFoundException.class,
-            InventoryNotFoundException.class
+            ProductDoesNotExistException.class,
+            SupplierDoesNotExistException.class,
+            InventoryDoesNotExistException.class
     })
-    public ResponseEntity<ExceptionDTO> handleNotFoundException(NotFoundException notFoundException) {
+    public ResponseEntity<ExceptionDTO> handleNotFoundException(RuntimeException notFoundException) {
         var exceptionDTO = ExceptionDTO.of(
                 notFoundException.getMessage(),
                 notFoundException.getClass().getSimpleName(),
@@ -37,11 +40,14 @@ public class WarehouseExceptionHandler {
     }
 
     @ExceptionHandler(value = {
-            ProductServerException.class,
-            SupplierServerException.class,
-            InventoryServerException.class
+            ProductCreationException.class,
+            ProductDeleteException.class,
+            SupplierCreationException.class,
+            SupplierDeleteException.class,
+            InventoryCreationException.class,
+            InventoryDeleteException.class,
     })
-    public ResponseEntity<ExceptionDTO> handleServerException(ServerException serverException) {
+    public ResponseEntity<ExceptionDTO> handleServerException(RuntimeException serverException) {
         var exceptionDTO = ExceptionDTO.of(
                 serverException.getMessage(),
                 serverException.getClass().getSimpleName(),
@@ -64,6 +70,17 @@ public class WarehouseExceptionHandler {
         var exceptionDTO = ExceptionDTO.of(
                 errorMap,
                 methodArgumentNotValidException.getClass().getSimpleName(),
+                HttpStatus.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST.value());
+        return new ResponseEntity<>(exceptionDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = {IllegalArgumentException.class})
+    public ResponseEntity<ExceptionDTO> handleIllegalArgumentException(RuntimeException exception) {
+        log.error("VALIDATION EXCEPTION OCCURRED!");
+        var exceptionDTO = ExceptionDTO.of(
+                exception.getMessage(),
+                exception.getClass().getSimpleName(),
                 HttpStatus.BAD_REQUEST,
                 HttpStatus.BAD_REQUEST.value());
         return new ResponseEntity<>(exceptionDTO, HttpStatus.BAD_REQUEST);
