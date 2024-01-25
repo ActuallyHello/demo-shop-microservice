@@ -4,9 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Getter
 public class OrderRequestDTO {
     @NotNull(message = "customerId must be not null")

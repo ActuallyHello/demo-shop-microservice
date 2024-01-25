@@ -3,13 +3,16 @@ package com.happyfxmas.ordermicroservice.api.mapper;
 import com.happyfxmas.ordermicroservice.api.dto.OrderDTO;
 import com.happyfxmas.ordermicroservice.api.dto.request.OrderRequestDTO;
 import com.happyfxmas.ordermicroservice.api.dto.request.OrderUpdateRequestDTO;
+import com.happyfxmas.ordermicroservice.api.dto.response.OrderWithItemsDTO;
 import com.happyfxmas.ordermicroservice.store.enums.OrderStatus;
+import com.happyfxmas.ordermicroservice.store.model.Item;
 import com.happyfxmas.ordermicroservice.store.model.Order;
 import lombok.NonNull;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public class OrderDTOMapper {
@@ -56,6 +59,20 @@ public class OrderDTOMapper {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .totalAmount(order.getTotalAmount())
+                .build();
+    }
+
+    public static OrderWithItemsDTO makeDTO(@NonNull Order order, List<Item> items) {
+        return OrderWithItemsDTO.builder()
+                .id(order.getId())
+                .customerId(order.getCustomerId())
+                .orderStatus(order.getOrderStatus())
+                .createdAt(order.getCreatedAt())
+                .updatedAt(order.getUpdatedAt())
+                .totalAmount(order.getTotalAmount())
+                .items(items.stream()
+                        .map(ItemDTOMapper::makeDTO)
+                        .toList())
                 .build();
     }
 }

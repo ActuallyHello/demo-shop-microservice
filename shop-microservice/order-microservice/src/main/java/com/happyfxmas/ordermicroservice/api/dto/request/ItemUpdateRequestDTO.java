@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -14,12 +13,7 @@ import java.math.BigInteger;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ItemRequestDTO {
-    @NotNull(message = "productId must be not null")
-    @NotBlank(message = "productId must be not blank")
-    @Length(max = 36, message = "productId cannot be more than 36 symbols")
-    private String productId;
-
+public class ItemUpdateRequestDTO {
     @NotNull(message = "price must be not null")
     @Min(value = 0, message = "price cannot be less than zero!")
     private BigDecimal price;

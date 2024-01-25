@@ -1,5 +1,6 @@
 package com.happyfxmas.ordermicroservice.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.happyfxmas.ordermicroservice.store.enums.ItemStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +20,9 @@ import java.util.UUID;
 @Setter
 public class ItemDTO {
     private UUID id;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
     private Timestamp createdAt;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "UTC")
     private Timestamp updatedAt;
     private UUID productId;
     private BigDecimal price;
