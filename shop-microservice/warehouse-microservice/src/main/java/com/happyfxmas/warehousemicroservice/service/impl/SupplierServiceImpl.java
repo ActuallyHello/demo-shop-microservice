@@ -1,11 +1,9 @@
 package com.happyfxmas.warehousemicroservice.service.impl;
 
-import com.happyfxmas.warehousemicroservice.api.dto.request.SupplierRequestDTO;
-import com.happyfxmas.warehousemicroservice.api.dto.request.SupplierUpdateRequestDTO;
-import com.happyfxmas.warehousemicroservice.api.mapper.SupplierMapper;
 import com.happyfxmas.warehousemicroservice.exception.response.SupplierServerException;
 import com.happyfxmas.warehousemicroservice.exception.service.SupplierCreationException;
 import com.happyfxmas.warehousemicroservice.exception.service.SupplierDeleteException;
+import com.happyfxmas.warehousemicroservice.exception.service.SupplierDoesNotExistException;
 import com.happyfxmas.warehousemicroservice.service.SupplierService;
 import com.happyfxmas.warehousemicroservice.store.model.Supplier;
 import com.happyfxmas.warehousemicroservice.store.repository.SupplierRepository;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -36,23 +33,24 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
-    public Optional<Supplier> getById(UUID id) {
-        var supplier = supplierRepository.findById(id);
+    public Supplier getById(UUID id) {
         log.info("GET SUPPLIER WITH ID={}", id);
-        return supplier;
+        return supplierRepository.findById(id)
+                .orElseThrow(() ->
+                        new SupplierDoesNotExistException("Supplier with id=%s was not found!".formatted(id)));
     }
 
     @Override
-    public Optional<Supplier> getByIdWithProducts(UUID id) {
-        var supplier = supplierRepository.findByIdWithProducts(id);
+    public Supplier getByIdWithProducts(UUID id) {
         log.info("GET SUPPLIER WITH ID={}", id);
-        return supplier;
+        return supplierRepository.findByIdWithProducts(id)
+                .orElseThrow(() ->
+                        new SupplierDoesNotExistException("Supplier with id=%s was not found!".formatted(id)));
     }
 
     @Override
     @Transactional
-    public Supplier create(SupplierRequestDTO supplierRequestDTO) {
-        var supplier = SupplierMapper.makeModel(supplierRequestDTO);
+    public Supplier create(Supplier supplier) {
         try {
             supplier = supplierRepository.saveAndFlush(supplier);
             log.info("SUPPLIER WAS CREATED WITH ID={}", supplier.getId());
@@ -65,22 +63,13 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Override
     @Transactional
-    public Supplier update(SupplierUpdateRequestDTO supplierUpdateRequestDTO, Supplier supplier) {
-        if (supplierUpdateRequestDTO.getCompanyName() != null) {
-            supplier.setCompanyName(supplierUpdateRequestDTO.getCompanyName());
-        }
-        if (supplierUpdateRequestDTO.getPhone() != null) {
-            supplier.setPhone(supplierUpdateRequestDTO.getPhone());
-        }
-        if (supplierUpdateRequestDTO.getEmail() != null) {
-            supplier.setEmail(supplierUpdateRequestDTO.getEmail());
-        }
+    public Supplier update(Supplier newSupplier) {
         try {
-            supplier = supplierRepository.saveAndFlush(supplier);
-            log.info("SUPPLIER WITH ID={} WAS UPDATED", supplier.getId());
-            return supplier;
+            newSupplier = supplierRepository.saveAndFlush(newSupplier);
+            log.info("SUPPLIER WITH ID={} WAS UPDATED", newSupplier.getId());
+            return newSupplier;
         } catch (RuntimeException exception) {
-            log.error("ERROR WHEN UPDATING SUPPLIER WITH ID={}: {}", supplier.getId(), exception.getMessage());
+            log.error("ERROR WHEN UPDATING SUPPLIER WITH ID={}: {}", newSupplier.getId(), exception.getMessage());
             throw new SupplierCreationException("Error when updating supplier! " + LOG_DB_ERROR_TAG, exception);
         }
     }

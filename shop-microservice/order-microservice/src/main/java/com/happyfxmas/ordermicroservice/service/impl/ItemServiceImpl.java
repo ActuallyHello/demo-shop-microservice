@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
@@ -40,6 +42,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public Item create(Item item) {
         try {
             itemRepository.save(item);
@@ -47,41 +50,44 @@ public class ItemServiceImpl implements ItemService {
             return item;
         } catch (DataAccessException exception) {
             log.error("ERROR WHEN SAVING ITEM: {}", exception.getMessage());
-            throw new ItemCreationException("Error when saving item! " + DATABASE_TAG);
+            throw new ItemCreationException("Error when saving item! " + DATABASE_TAG, exception);
         }
     }
 
     @Override
+    @Transactional
     public List<Item> createAll(List<Item> items) {
         try {
-            itemRepository.saveAll(items);
+            items = itemRepository.saveAll(items);
             log.info("CREATED {} ITEMS", items.size());
             return items;
         } catch (DataAccessException exception) {
             log.error("ERROR WHEN SAVING ITEM: {}", exception.getMessage());
-            throw new ItemCreationException("Error when saving item! " + DATABASE_TAG);
+            throw new ItemCreationException("Error when saving item! " + DATABASE_TAG, exception);
         }
     }
 
     @Override
+    @Transactional
     public void update(Item newItem) {
         try {
             itemRepository.update(newItem);
             log.info("UPDATED ITEM WITH ID={}", newItem.getId());
         } catch (DataAccessException exception) {
             log.error("ERROR WHEN UPDATING ITEM: {}", exception.getMessage());
-            throw new ItemCreationException("Error when updating item! " + DATABASE_TAG);
+            throw new ItemCreationException("Error when updating item! " + DATABASE_TAG, exception);
         }
     }
 
     @Override
+    @Transactional
     public void delete(Item item) {
         try {
             itemRepository.delete(item);
             log.info("DELETED ITEM WITH ID={}", item.getId());
         } catch (DataAccessException exception) {
             log.error("ERROR WHEN DELETING ITEM: {}", exception.getMessage());
-            throw new ItemDeleteException("Error when deleting item! " + DATABASE_TAG);
+            throw new ItemDeleteException("Error when deleting item! " + DATABASE_TAG, exception);
         }
     }
 }

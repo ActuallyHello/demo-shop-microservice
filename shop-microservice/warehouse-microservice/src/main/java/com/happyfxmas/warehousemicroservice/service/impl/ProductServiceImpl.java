@@ -1,14 +1,10 @@
 package com.happyfxmas.warehousemicroservice.service.impl;
 
-import com.happyfxmas.warehousemicroservice.api.dto.request.ProductRequestDTO;
-import com.happyfxmas.warehousemicroservice.api.dto.request.ProductUpdateRequestDTO;
-import com.happyfxmas.warehousemicroservice.api.mapper.ProductMapper;
 import com.happyfxmas.warehousemicroservice.exception.service.ProductCreationException;
 import com.happyfxmas.warehousemicroservice.exception.service.ProductDeleteException;
+import com.happyfxmas.warehousemicroservice.exception.service.ProductDoesNotExistException;
 import com.happyfxmas.warehousemicroservice.service.ProductService;
 import com.happyfxmas.warehousemicroservice.store.model.Product;
-import com.happyfxmas.warehousemicroservice.store.model.Supplier;
-import com.happyfxmas.warehousemicroservice.store.model.enums.ProductType;
 import com.happyfxmas.warehousemicroservice.store.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -37,31 +32,32 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Optional<Product> getById(UUID id) {
-        var product = productRepository.findById(id);
+    public Product getById(UUID id) {
         log.info("GET PRODUCT WITH ID={}", id);
-        return product;
+        return productRepository.findById(id)
+                .orElseThrow(() ->
+                        new ProductDoesNotExistException("Product with id=%s was not found!".formatted(id)));
     }
 
     @Override
-    public Optional<Product> getByIdWithSupplier(UUID id) {
-        var product = productRepository.findByIdWithSupplier(id);
+    public Product getByIdWithSupplier(UUID id) {
         log.info("GET PRODUCT WITH ID={}", id);
-        return product;
+        return productRepository.findByIdWithSupplier(id)
+                .orElseThrow(() ->
+                        new ProductDoesNotExistException("Product with id=%s was not found!".formatted(id)));
     }
 
     @Override
-    public Optional<Product> getByIdWithInventory(UUID id) {
-        var product = productRepository.findByIdWithInventory(id);
+    public Product getByIdWithInventory(UUID id) {
         log.info("GET PRODUCT WITH ID={}", id);
-        return product;
+        return productRepository.findByIdWithInventory(id)
+                .orElseThrow(() ->
+                        new ProductDoesNotExistException("Product with id=%s was not found!".formatted(id)));
     }
 
     @Override
     @Transactional
-    public Product create(ProductRequestDTO productRequestDTO, Supplier supplier) {
-        var product = ProductMapper.makeModel(productRequestDTO);
-        product.setSupplier(supplier);
+    public Product create(Product product) {
         try {
             product = productRepository.saveAndFlush(product);
             log.info("PRODUCT WAS CREATED WITH ID={}", product.getId());
@@ -74,22 +70,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public Product update(ProductUpdateRequestDTO productUpdateRequestDTO, Product product) {
-        if (productUpdateRequestDTO.getTitle() != null) {
-            product.setTitle(productUpdateRequestDTO.getTitle());
-        }
-        if (productUpdateRequestDTO.getDescription() != null) {
-            product.setDescription(productUpdateRequestDTO.getDescription());
-        }
-        if (productUpdateRequestDTO.getType() != null) {
-            product.setType(ProductType.valueOf(productUpdateRequestDTO.getType()));
-        }
+    public Product update(Product newProduct) {
         try {
-            product = productRepository.saveAndFlush(product);
-            log.info("PRODUCT WAS UPDATED WITH ID={}", product.getId());
-            return product;
+            newProduct = productRepository.saveAndFlush(newProduct);
+            log.info("PRODUCT WAS UPDATED WITH ID={}", newProduct.getId());
+            return newProduct;
         } catch (RuntimeException exception) {
-            log.error("ERROR WHEN UPDATING PRODUCT WITH ID={}: {}", product.getId(), exception.getMessage());
+            log.error("ERROR WHEN UPDATING PRODUCT WITH ID={}: {}", newProduct.getId(), exception.getMessage());
             throw new ProductCreationException("Error when updating product! " + LOG_DB_ERROR_TAG, exception);
         }
     }

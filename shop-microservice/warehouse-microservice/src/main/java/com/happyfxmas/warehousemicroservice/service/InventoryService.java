@@ -9,9 +9,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface InventoryService {
-    Optional<Inventory> getById(UUID id);
-    Optional<Inventory> getByProduct(Product product);
-    Inventory create(InventoryRequestDTO inventoryRequestDTO, Product product);
-    Inventory update(InventoryUpdateRequestDTO inventoryUpdateRequestDTO, Inventory inventory);
+    Inventory getById(UUID id);
+    Inventory getByProduct(Product product);
+    Inventory create(Inventory inventory);
+    Inventory update(Inventory newinventory);
     void delete(Inventory inventory);
 }

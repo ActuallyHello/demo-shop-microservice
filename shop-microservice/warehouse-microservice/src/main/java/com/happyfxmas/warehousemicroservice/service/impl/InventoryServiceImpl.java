@@ -1,10 +1,8 @@
 package com.happyfxmas.warehousemicroservice.service.impl;
 
-import com.happyfxmas.warehousemicroservice.api.dto.request.InventoryRequestDTO;
-import com.happyfxmas.warehousemicroservice.api.dto.request.InventoryUpdateRequestDTO;
-import com.happyfxmas.warehousemicroservice.api.mapper.InventoryMapper;
 import com.happyfxmas.warehousemicroservice.exception.service.InventoryCreationException;
 import com.happyfxmas.warehousemicroservice.exception.service.InventoryDeleteException;
+import com.happyfxmas.warehousemicroservice.exception.service.InventoryDoesNotExistException;
 import com.happyfxmas.warehousemicroservice.service.InventoryService;
 import com.happyfxmas.warehousemicroservice.store.model.Inventory;
 import com.happyfxmas.warehousemicroservice.store.model.Product;
@@ -14,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -27,29 +24,30 @@ public class InventoryServiceImpl implements InventoryService {
     private static final String LOG_DB_ERROR_TAG = "[DATABASE]";
 
     @Override
-    public Optional<Inventory> getById(UUID id) {
-        var inventory = inventoryRepository.findById(id);
+    public Inventory getById(UUID id) {
         log.info("GET INVENTORY WITH ID={}", id);
-        return inventory;
+        return inventoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new InventoryDoesNotExistException("Inventory with id=%s was not found!".formatted(id)));
     }
 
     @Override
-    public Optional<Inventory> getByProduct(Product product) {
-        var inventory = inventoryRepository.findByProduct(product);
+    public Inventory getByProduct(Product product) {
         log.info("GET INVENTORY BY PRODUCT WITH ID={}", product.getId());
-        return inventory;
+        return inventoryRepository.findByProduct(product)
+                .orElseThrow(() ->
+                        new InventoryDoesNotExistException(
+                                "Inventory with product id=%s was not found!".formatted(product.getId())));
     }
 
     @Override
     @Transactional
-    public Inventory create(InventoryRequestDTO inventoryRequestDTO, Product product) {
-        var inventory = InventoryMapper.makeModel(inventoryRequestDTO);
-        product.setInventory(inventory);
+    public Inventory create(Inventory inventory) {
         try {
             inventory = inventoryRepository.saveAndFlush(inventory);
             log.info("INVENTORY WAS CREATED WITH ID={}", inventory.getId());
             return inventory;
-        } catch (RuntimeException exception) {
+        } catch (RuntimeException exception) { // TODO CATCH COMMON FOR DataIntegrityViolationException AND PersistenceException
             log.error("ERROR WHEN CREATING INVENTORY: {}", exception.getMessage());
             throw new InventoryCreationException("Error when creating inventory! " + LOG_DB_ERROR_TAG, exception);
         }
@@ -57,14 +55,13 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     @Transactional
-    public Inventory update(InventoryUpdateRequestDTO inventoryUpdateRequestDTO, Inventory inventory) {
-        inventory.setQuantity(inventoryUpdateRequestDTO.getQuantity());
+    public Inventory update(Inventory newInventory) {
         try {
-            inventory = inventoryRepository.saveAndFlush(inventory);
-            log.info("PRODUCT WAS UPDATED WITH ID={}", inventory.getId());
-            return inventory;
-        } catch (RuntimeException exception) {
-            log.error("ERROR WHEN UPDATING PRODUCT WITH ID={}: {}", inventory.getId(), exception.getMessage());
+            newInventory = inventoryRepository.saveAndFlush(newInventory);
+            log.info("PRODUCT WAS UPDATED WITH ID={}", newInventory.getId());
+            return newInventory;
+        } catch (RuntimeException exception) { // TODO
+            log.error("ERROR WHEN UPDATING PRODUCT WITH ID={}: {}", newInventory.getId(), exception.getMessage());
             throw new InventoryCreationException("Error when updating inventory! " + LOG_DB_ERROR_TAG, exception);
         }
     }
@@ -76,7 +73,7 @@ public class InventoryServiceImpl implements InventoryService {
             inventoryRepository.delete(inventory);
             inventoryRepository.flush();
             log.info("INVENTORY WAS DELETED WITH ID={}", inventory.getId());
-        } catch (RuntimeException exception) {
+        } catch (RuntimeException exception) { // TODO
             log.error("ERROR WHEN DELETING INVENTORY WITH ID={}: {}", inventory.getId(), exception.getMessage());
             throw new InventoryDeleteException("Error when deleting inventory! " + LOG_DB_ERROR_TAG, exception);
         }

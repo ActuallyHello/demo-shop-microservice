@@ -1,6 +1,7 @@
 package com.happyfxmas.ordermicroservice.service;
 
 import com.happyfxmas.ordermicroservice.store.enums.OrderStatus;
+import com.happyfxmas.ordermicroservice.store.model.Item;
 import com.happyfxmas.ordermicroservice.store.model.Order;
 
 import java.util.List;
@@ -13,4 +14,5 @@ public interface OrderService {
     Order create(Order order);
     void update(Order newOrder);
     void delete(Order order);
+    void updateTotalAmountByItems(Order order, List<Item> items);
 }
