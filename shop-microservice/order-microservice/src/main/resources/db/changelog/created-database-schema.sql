@@ -3,7 +3,7 @@
 
 --changeset happyfxmas:1
 
-CREATE TYPE order_status AS ENUM ('CREATED', 'DELIVERED', 'CANCELLED');
+-- TODO CREATE TYPE order_status AS ENUM ('CREATED', 'DELIVERED', 'CANCELLED');
 
 create table orders
 (
@@ -12,12 +12,12 @@ create table orders
     updated_at timestamp(6) with time zone not null,
     customer_id uuid not null,
     total_amount numeric(38, 2) not null,
-    status order_status not null,
+    status varchar(255) not null,
 
     primary key (id)
 );
 
-CREATE TYPE item_status AS ENUM ('IN_STOCK', 'OUT_OF_STOCK');
+-- TODO CREATE TYPE item_status AS ENUM ('IN_STOCK', 'OUT_OF_STOCK');
 
 create table item
 (
@@ -27,7 +27,7 @@ create table item
     product_id uuid not null,
     price numeric(38, 2) not null,
     quantity bigint not null,
-    status item_status not null,
+    status varchar(255) not null,
     orders_id uuid not null,
 
     primary key (id)
