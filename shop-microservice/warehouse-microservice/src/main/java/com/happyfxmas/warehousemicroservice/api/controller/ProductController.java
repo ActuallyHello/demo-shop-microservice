@@ -5,14 +5,7 @@ import com.happyfxmas.warehousemicroservice.api.dto.response.ProductWithInventor
 import com.happyfxmas.warehousemicroservice.api.dto.request.ProductRequestDTO;
 import com.happyfxmas.warehousemicroservice.api.dto.request.ProductUpdateRequestDTO;
 import com.happyfxmas.warehousemicroservice.api.dto.response.ProductWithSupplierDTO;
-import com.happyfxmas.warehousemicroservice.api.mapper.ProductMapper;
-import com.happyfxmas.warehousemicroservice.api.mapper.ProductWithInventoryMapper;
-import com.happyfxmas.warehousemicroservice.api.mapper.ProductWithSupplierMapper;
-import com.happyfxmas.warehousemicroservice.exception.response.ProductNotFoundException;
-import com.happyfxmas.warehousemicroservice.exception.response.ProductServerException;
-import com.happyfxmas.warehousemicroservice.exception.response.SupplierNotFoundException;
-import com.happyfxmas.warehousemicroservice.exception.service.ProductCreationException;
-import com.happyfxmas.warehousemicroservice.exception.service.ProductDeleteException;
+import com.happyfxmas.warehousemicroservice.api.mapper.ProductDTOMapper;
 import com.happyfxmas.warehousemicroservice.service.ProductService;
 import com.happyfxmas.warehousemicroservice.service.SupplierService;
 import jakarta.validation.Valid;
@@ -58,74 +51,54 @@ public class ProductController {
         );
         var products = productService.getAll(pageable);
         var productDTOs = products.stream()
-                .map(ProductMapper::makeDTO)
+                .map(ProductDTOMapper::makeDTO)
                 .toList();
         return ResponseEntity.ok(productDTOs);
     }
 
     @GetMapping(BY_ID)
     public ResponseEntity<ProductDTO> getProductById(@PathVariable UUID id) {
-        var productDTO = productService.getById(id)
-                .map(ProductMapper::makeDTO)
-                .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
-        return ResponseEntity.ok(productDTO);
+        var product = productService.getById(id);
+        return ResponseEntity.ok(ProductDTOMapper.makeDTO(product));
     }
 
     @GetMapping(BY_ID + WITH_SUPPLIER)
     public ResponseEntity<ProductWithSupplierDTO> getProductWithSupplierById(@PathVariable UUID id) {
-        var productWithSupplierDTO = productService.getByIdWithSupplier(id)
-                .map(product -> ProductWithSupplierMapper.makeDTO(product, product.getSupplier()))
-                .orElseThrow(() -> new ProductNotFoundException(
-                        "ProductSupplier with id=%s does not exist!".formatted(id)));
-        return ResponseEntity.ok(productWithSupplierDTO);
+        var productWithSupplier = productService.getByIdWithSupplier(id);
+        return ResponseEntity.ok(
+                ProductDTOMapper.makeDTO(productWithSupplier, productWithSupplier.getSupplier()));
     }
 
     @GetMapping(BY_ID + WITH_INVENTORY)
     public ResponseEntity<ProductWithInventoryDTO> getProductWithInventoryById(@PathVariable UUID id) {
-        var productWithInventoryDTO = productService.getByIdWithInventory(id)
-                .map(product -> ProductWithInventoryMapper.makeDTO(product, product.getInventory()))
-                .orElseThrow(() -> new ProductNotFoundException(
-                        "ProductInventory with id=%s does not exist!".formatted(id)));
-        return ResponseEntity.ok(productWithInventoryDTO);
+        var productWithInventory = productService.getByIdWithInventory(id);
+        return ResponseEntity.ok(
+                ProductDTOMapper.makeDTO(productWithInventory, productWithInventory.getInventory()));
     }
 
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody @Valid ProductRequestDTO productRequestDTO) {
-        var supplier = supplierService.getById(UUID.fromString(productRequestDTO.getSupplierId()))
-                .orElseThrow(() -> new SupplierNotFoundException(
-                        "Supplier with id=%s was not found!".formatted(productRequestDTO.getSupplierId())));
-        try {
-            var product = productService.create(productRequestDTO, supplier);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(Map.of("ID", product.getId()));
-        } catch (ProductCreationException exception) {
-            throw new ProductServerException(exception.getMessage(), exception);
-        }
+        var supplier = supplierService.getById(UUID.fromString(productRequestDTO.getSupplierId()));
+        var product = ProductDTOMapper.makeModel(productRequestDTO, supplier);
+        product = productService.create(product);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(Map.of("ID", product.getId()));
     }
 
     @PatchMapping(BY_ID)
     public ResponseEntity<ProductDTO> updateProductById(@PathVariable UUID id,
                                                         @RequestBody @Valid ProductUpdateRequestDTO productUpdateRequestDTO) {
-        var product = productService.getByIdWithSupplier(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
-        try {
-            product = productService.update(productUpdateRequestDTO, product);
-            return ResponseEntity.ok(ProductMapper.makeDTO(product));
-        } catch (ProductCreationException exception) {
-            throw new ProductServerException(exception.getMessage(), exception);
-        }
+        var oldProduct = productService.getByIdWithSupplier(id);
+        var newProduct = ProductDTOMapper.makeModel(productUpdateRequestDTO, oldProduct);
+        newProduct = productService.update(newProduct);
+        return ResponseEntity.ok(ProductDTOMapper.makeDTO(newProduct));
     }
 
     @DeleteMapping(BY_ID)
     public ResponseEntity<?> deleteProductById(@PathVariable UUID id) {
-        var product = productService.getById(id)
-                .orElseThrow(() -> new ProductNotFoundException("Product with id=%s does not exist!".formatted(id)));
-        try {
-            productService.delete(product);
-            return ResponseEntity.noContent().build();
-        } catch (ProductDeleteException exception) {
-            throw new ProductServerException(exception.getMessage(), exception);
-        }
+        var product = productService.getById(id);
+        productService.delete(product);
+        return ResponseEntity.noContent().build();
     }
 }
