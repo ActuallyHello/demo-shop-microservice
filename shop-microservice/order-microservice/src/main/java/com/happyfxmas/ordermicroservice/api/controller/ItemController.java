@@ -6,6 +6,8 @@ import com.happyfxmas.ordermicroservice.api.dto.request.ItemUpdateRequestDTO;
 import com.happyfxmas.ordermicroservice.api.mapper.ItemDTOMapper;
 import com.happyfxmas.ordermicroservice.service.ItemService;
 import com.happyfxmas.ordermicroservice.service.OrderService;
+import com.happyfxmas.ordermicroservice.service.communication.WarehouseCommunication;
+import com.happyfxmas.ordermicroservice.service.facade.OrderFacade;
 import com.happyfxmas.ordermicroservice.store.enums.ItemStatus;
 import com.happyfxmas.ordermicroservice.store.model.Item;
 import jakarta.validation.Valid;
@@ -33,6 +35,9 @@ public class ItemController {
 
     private final ItemService itemService;
     private final OrderService orderService;
+    private final OrderFacade orderFacade;
+    private final WarehouseCommunication warehouseCommunication;
+
     private static final String BY_ID = "/{id}";
     private static final String ALL_STATUSES = "/statuses";
 
@@ -56,8 +61,9 @@ public class ItemController {
         var items = itemListRequestDTO.getItems().stream()
                     .map(item -> ItemDTOMapper.makeModel(item, order))
                     .toList();
+        warehouseCommunication.checkForUnavailableProductsInItems(items);
         items = itemService.createAll(items);
-        orderService.updateTotalAmountByItems(order, items);
+        orderFacade.updateOrderTotalAmountByItems(order, items);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(Map.of("ID", items.stream()
@@ -71,8 +77,7 @@ public class ItemController {
         var oldItem = itemService.getById(id);
         var newItem = ItemDTOMapper.makeModel(itemUpdateRequestDTO, oldItem);
         itemService.update(newItem);
-        var items = itemService.getAllByOrderId(newItem.getOrder().getId()); // TODO
-        orderService.updateTotalAmountByItems(newItem.getOrder(), items);
+        orderFacade.updateOrderTotalAmountByItems(newItem.getOrder());
         return ResponseEntity.noContent().build();
     }
 
@@ -80,8 +85,7 @@ public class ItemController {
     public ResponseEntity<?> deleteItemById(@PathVariable UUID id) {
         var item = itemService.getById(id);
         itemService.delete(item);
-        var items = itemService.getAllByOrderId(item.getOrder().getId()); // TODO
-        orderService.updateTotalAmountByItems(item.getOrder(), items);
+        orderFacade.updateOrderTotalAmountByItems(item.getOrder());
         return ResponseEntity.noContent().build();
     }
 }
