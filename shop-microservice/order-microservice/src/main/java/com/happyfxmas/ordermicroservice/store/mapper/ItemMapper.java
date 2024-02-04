@@ -2,6 +2,7 @@ package com.happyfxmas.ordermicroservice.store.mapper;
 
 import com.happyfxmas.ordermicroservice.store.enums.ItemStatus;
 import com.happyfxmas.ordermicroservice.store.model.Item;
+import com.happyfxmas.ordermicroservice.store.model.Order;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,9 @@ public class ItemMapper implements RowMapper<Item> {
                 .quantity(resultSet.getObject("quantity", BigInteger.class))
                 .productId(resultSet.getObject("product_id", UUID.class))
                 .itemStatus(ItemStatus.valueOf(resultSet.getString("status")))
+                .order(Order.builder()
+                        .id(resultSet.getObject("orders_id", UUID.class))
+                        .build())
                 .build();
     }
 }

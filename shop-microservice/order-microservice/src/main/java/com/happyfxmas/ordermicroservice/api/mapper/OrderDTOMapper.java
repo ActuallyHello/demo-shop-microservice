@@ -28,14 +28,14 @@ public class OrderDTOMapper {
     }
 
     public static Order makeModel(@NonNull OrderUpdateRequestDTO orderUpdateRequestDTO, Order oldOrder) {
-        if (orderUpdateRequestDTO.getCustomerId() == null && orderUpdateRequestDTO.getOrderStatus() == null &&
-                orderUpdateRequestDTO.getTotalAmount() == null) {
+        if (orderUpdateRequestDTO.getCustomerId() == null && orderUpdateRequestDTO.getOrderStatus() == null) {
             throw new IllegalArgumentException("There are no fields to update in order!");
         }
         Order.OrderBuilder orderBuilder = Order.builder()
                 .id(oldOrder.getId())
                 .createdAt(oldOrder.getCreatedAt())
-                .updatedAt(Timestamp.from(Instant.now()));
+                .updatedAt(Timestamp.from(Instant.now()))
+                .totalAmount(oldOrder.getTotalAmount());
         orderBuilder.customerId(orderUpdateRequestDTO.getCustomerId() != null
                 ? UUID.fromString(orderUpdateRequestDTO.getCustomerId())
                 : oldOrder.getCustomerId()
@@ -43,10 +43,6 @@ public class OrderDTOMapper {
         orderBuilder.orderStatus(orderUpdateRequestDTO.getOrderStatus() != null
                 ? OrderStatus.valueOf(orderUpdateRequestDTO.getOrderStatus())
                 : oldOrder.getOrderStatus()
-        );
-        orderBuilder.totalAmount(orderUpdateRequestDTO.getTotalAmount() != null
-                ? orderUpdateRequestDTO.getTotalAmount()
-                : oldOrder.getTotalAmount()
         );
         return orderBuilder.build();
     }
