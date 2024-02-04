@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: ${WAREHOUSE_POSTGRES_USERNAME}
       POSTGRES_PASSWORD_FILE: /run/secrets/warehouse-secrets
-      POSTGRES_DB: ${POSTGRES_DATABASE_NAME}
+      POSTGRES_DB: ${WAREHOUSE_POSTGRES_DATABASE_NAME}
     expose:
       - "5431"
     ports:
@@ -24,16 +24,50 @@ services:
       context: ./warehouse-microservice/.
     container_name: warehouse-app
     ports:
-      - "9090:9090"
+      - "8050:8050"
     depends_on:
       - warehouse-postgres
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://warehouse-postgres:5431/${POSTGRES_DATABASE_NAME}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://warehouse-postgres:5431/${WAREHOUSE_POSTGRES_DATABASE_NAME}
       - SPRING_DATASOURCE_USERNAME=${WAREHOUSE_POSTGRES_USERNAME}
       - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/warehouse-secrets
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     secrets:
       - warehouse-secrets
+
+  order-postgres:
+    image: 'postgres:13.11-alpine'
+    container_name: order-postgres-database
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${ORDER_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD_FILE: /run/secrets/order-secrets
+      POSTGRES_DB: ${ORDER_POSTGRES_DATABASE_NAME}
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    command: -p 5432
+    restart: unless-stopped
+    secrets:
+      - order-secrets
+
+  order-service:
+    build:
+      context: ./order-microservice/.
+    container_name: order-app
+    ports:
+      - "8051:8051"
+    depends_on:
+      - order-postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://order-postgres:5432/${ORDER_POSTGRES_DATABASE_NAME}
+      - SPRING_DATASOURCE_USERNAME=${ORDER_POSTGRES_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/order-secrets
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    secrets:
+      - order-secrets
 
 volumes:
   pgdata:
@@ -41,3 +75,5 @@ volumes:
 secrets:
   warehouse-secrets:
     file: secrets/warehouse-postgres-password.env
+  order-secrets:
+    file: secrets/order-postgres-password.env
