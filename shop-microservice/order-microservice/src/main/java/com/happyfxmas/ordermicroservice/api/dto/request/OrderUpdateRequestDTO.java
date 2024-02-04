@@ -17,8 +17,5 @@ public class OrderUpdateRequestDTO {
     @Length(max = 36, message = "customerId cannot be more than 36 symbols")
     private String customerId;
 
-    @Min(value = 0, message = "totalAmount cannot be less than zero!")
-    private BigDecimal totalAmount;
-
     private String orderStatus;
 }

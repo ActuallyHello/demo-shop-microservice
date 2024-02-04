@@ -1,5 +1,6 @@
 package com.happyfxmas.ordermicroservice.exception;
 
+import com.happyfxmas.ordermicroservice.exception.communication.ProductsDoesNotExistException;
 import com.happyfxmas.ordermicroservice.exception.service.ItemCreationException;
 import com.happyfxmas.ordermicroservice.exception.service.ItemDeleteException;
 import com.happyfxmas.ordermicroservice.exception.service.ItemDoesNotExistException;
@@ -77,6 +78,18 @@ public class OrderExceptionHandler {
         var exceptionDTO = ExceptionDTO.of(
                 errorMap,
                 methodArgumentNotValidException.getClass().getSimpleName(),
+                HttpStatus.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST.value());
+        return new ResponseEntity<>(exceptionDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = ProductsDoesNotExistException.class)
+    public ResponseEntity<Object> handleValidationException(ProductsDoesNotExistException productsDoesNotExistException) {
+        var errorMap =
+                Map.of("Products", productsDoesNotExistException.getUnavailableProductIds());
+        var exceptionDTO = ExceptionDTO.of(
+                errorMap,
+                productsDoesNotExistException.getClass().getSimpleName(),
                 HttpStatus.BAD_REQUEST,
                 HttpStatus.BAD_REQUEST.value());
         return new ResponseEntity<>(exceptionDTO, HttpStatus.BAD_REQUEST);
