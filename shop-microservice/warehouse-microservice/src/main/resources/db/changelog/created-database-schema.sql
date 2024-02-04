@@ -7,10 +7,9 @@ create table inventory
     id uuid not null,
     quantity bigint not null,
     updated_at timestamp(6) with time zone,
-    product_id uuid not null,
+    product_id uuid not null unique,
 
-    primary key (id),
-    unique(product_id)
+    primary key (id)
 );
 
 create table product
@@ -20,11 +19,10 @@ create table product
     updated_at timestamp(6) with time zone,
     supplier_id uuid not null,
     description varchar(255) not null,
-    title varchar(255),
+    title varchar(255) not null unique,
     type varchar(255) not null,
 
-    primary key (id),
-    unique (title)
+    primary key (id)
 );
 
 create table supplier
@@ -32,14 +30,11 @@ create table supplier
     id uuid not null,
     created_at timestamp(6) with time zone,
     updated_at timestamp(6) with time zone,
-    company_name varchar(255),
-    email varchar(255),
-    phone varchar(255),
+    company_name varchar(255) unique,
+    email varchar(255) unique,
+    phone varchar(255) unique,
 
-    primary key (id),
-    unique (company_name),
-    unique (email)
-    unique (phone)
+    primary key (id)
 );
 
 alter table if exists inventory add constraint inventory_product_fk foreign key (product_id) references product;
